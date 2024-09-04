@@ -2,65 +2,74 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Task;
-use App\Models\Project;
 use Illuminate\Http\Request;
+use App\Repositories\TaskRepository;
 
 class TaskController extends Controller
 {
-    // Display a listing of the tasks for a specific project
+    protected $taskRepository;
+
+    public function __construct(TaskRepository $taskRepository)
+    {
+        $this->taskRepository = $taskRepository;
+    }
+
     public function index($projectId)
     {
-        $project = Project::findOrFail($projectId);
-        $tasks = $project->tasks;
+        $tasks = $this->taskRepository->getAllTasks($projectId);
         return response()->json($tasks);
     }
 
-    // Store a newly created task within a specific project
-    public function store(Request $request, $projectId)
+    public function store(Request $request)
     {
-        $validated = $request->validate([
+        // Validation
+        $validatedData = $request->validate([
+            'project_id' => 'required|exists:projects,id',
             'name' => 'required|string|max:255',
             'description' => 'nullable|string',
             'status' => 'required|in:todo,in-progress,done',
         ]);
 
-        $project = Project::findOrFail($projectId);
-        $task = $project->tasks()->create($validated);
-
+        $task = $this->taskRepository->createTask($validatedData);
         return response()->json($task, 201);
     }
 
-    // Display the specified task within a specific project
-    public function show($projectId, $taskId)
+    public function show($id)
     {
-        $project = Project::findOrFail($projectId);
-        $task = $project->tasks()->findOrFail($taskId);
+        $task = $this->taskRepository->findTaskById($id);
+
+        if (!$task) {
+            return response()->json(['message' => 'Task not found'], 404);
+        }
+
         return response()->json($task);
     }
 
-    // Update the specified task within a specific project
-    public function update(Request $request, $projectId, $taskId)
+    public function update(Request $request, $id)
     {
-        $validated = $request->validate([
-            'name' => 'required|string|max:255',
+        // Validation
+        $validatedData = $request->validate([
+            'name' => 'sometimes|required|string|max:255',
             'description' => 'nullable|string',
-            'status' => 'required|in:todo,in-progress,done',
+            'status' => 'sometimes|required|in:todo,in-progress,done',
         ]);
 
-        $project = Project::findOrFail($projectId);
-        $task = $project->tasks()->findOrFail($taskId);
-        $task->update($validated);
+        $task = $this->taskRepository->updateTask($id, $validatedData);
+
+        if (!$task) {
+            return response()->json(['message' => 'Task not found'], 404);
+        }
 
         return response()->json($task);
     }
 
-    // Remove the specified task from a specific project
-    public function destroy($projectId, $taskId)
+    public function destroy($id)
     {
-        $project = Project::findOrFail($projectId);
-        $task = $project->tasks()->findOrFail($taskId);
-        $task->delete();
+        $task = $this->taskRepository->deleteTask($id);
+
+        if (!$task) {
+            return response()->json(['message' => 'Task not found'], 404);
+        }
 
         return response()->json(null, 204);
     }
