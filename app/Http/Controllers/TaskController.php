@@ -2,63 +2,66 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Task;
+use App\Models\Project;
 use Illuminate\Http\Request;
 
 class TaskController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
-    public function index()
+    // Display a listing of the tasks for a specific project
+    public function index($projectId)
     {
-        //
+        $project = Project::findOrFail($projectId);
+        $tasks = $project->tasks;
+        return response()->json($tasks);
     }
 
-    /**
-     * Show the form for creating a new resource.
-     */
-    public function create()
+    // Store a newly created task within a specific project
+    public function store(Request $request, $projectId)
     {
-        //
+        $validated = $request->validate([
+            'name' => 'required|string|max:255',
+            'description' => 'nullable|string',
+            'status' => 'required|in:todo,in-progress,done',
+        ]);
+
+        $project = Project::findOrFail($projectId);
+        $task = $project->tasks()->create($validated);
+
+        return response()->json($task, 201);
     }
 
-    /**
-     * Store a newly created resource in storage.
-     */
-    public function store(Request $request)
+    // Display the specified task within a specific project
+    public function show($projectId, $taskId)
     {
-        //
+        $project = Project::findOrFail($projectId);
+        $task = $project->tasks()->findOrFail($taskId);
+        return response()->json($task);
     }
 
-    /**
-     * Display the specified resource.
-     */
-    public function show(string $id)
+    // Update the specified task within a specific project
+    public function update(Request $request, $projectId, $taskId)
     {
-        //
+        $validated = $request->validate([
+            'name' => 'required|string|max:255',
+            'description' => 'nullable|string',
+            'status' => 'required|in:todo,in-progress,done',
+        ]);
+
+        $project = Project::findOrFail($projectId);
+        $task = $project->tasks()->findOrFail($taskId);
+        $task->update($validated);
+
+        return response()->json($task);
     }
 
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(string $id)
+    // Remove the specified task from a specific project
+    public function destroy($projectId, $taskId)
     {
-        //
-    }
+        $project = Project::findOrFail($projectId);
+        $task = $project->tasks()->findOrFail($taskId);
+        $task->delete();
 
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, string $id)
-    {
-        //
-    }
-
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(string $id)
-    {
-        //
+        return response()->json(null, 204);
     }
 }
