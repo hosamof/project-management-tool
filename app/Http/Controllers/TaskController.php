@@ -29,7 +29,6 @@ class TaskController extends Controller
             'description' => 'nullable|string',
             'status' => 'required|in:todo,in-progress,done',
         ]);
-
         $task = $this->taskRepository->createTask($validatedData);
         return response()->json($task, 201);
     }

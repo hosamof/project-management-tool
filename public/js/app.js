@@ -1,18 +1,21 @@
 document.addEventListener('DOMContentLoaded', function () {
     const projectList = document.getElementById('project-list');
-    const projectModal = document.getElementById('project-modal');
     const projectForm = document.getElementById('project-form');
     const createProjectBtn = document.getElementById('create-project-btn');
     const closeBtns = document.querySelectorAll('.close-btn');
 
-    const taskModal = document.getElementById('task-modal');
     const taskForm = document.getElementById('task-form');
     const taskList = document.getElementById('task-list');
     const addTaskBtn = document.getElementById('add-task-btn');
 
     // Fetch Projects
     function fetchProjects() {
-        fetch('/api/projects')
+        const options = {
+            method: 'GET',
+            headers: { 'content-type': 'application/json' },
+            mode: 'no-cors'
+        };
+        fetch('api/projects', options)
             .then(response => response.json())
             .then(projects => {
                 projectList.innerHTML = '';
@@ -20,7 +23,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     const li = document.createElement('li');
                     li.textContent = project.name;
                     li.addEventListener('click', () => {
-                        window.location.href = `project-detail.html?id=${project.id}`;
+                        window.location.href = `project-detail?id=${project.id}`;
                     });
                     projectList.appendChild(li);
                 });
@@ -28,16 +31,22 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     // Create Project
-    projectForm.addEventListener('submit', function (e) {
+    projectForm?.addEventListener('submit', function (e) {
         e.preventDefault();
         const formData = new FormData(projectForm);
-        fetch('/api/projects', {
+        fetch('api/projects', {
             method: 'POST',
+            // headers: {
+            //     'Content-Type': 'application/json',
+            //     'X-CSRF-TOKEN': getCsrfToken() // Add CSRF token here
+            // },
+            mode: 'no-cors',
             body: formData
         })
             .then(response => response.json())
             .then(project => {
                 fetchProjects();
+                const projectModal = document.getElementById('project-modal');
                 projectModal.style.display = 'none';
                 projectForm.reset();
             });
@@ -45,7 +54,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
     // Fetch Tasks for a Specific Project
     function fetchTasks(projectId) {
-        fetch(`/api/projects/${projectId}/tasks`)
+        fetch(`api/projects/${projectId}/tasks`)
             .then(response => response.json())
             .then(tasks => {
                 taskList.innerHTML = '';
@@ -61,35 +70,46 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     // Create Task
-    taskForm.addEventListener('submit', function (e) {
+    taskForm?.addEventListener('submit', function (e) {
         e.preventDefault();
         const projectId = new URLSearchParams(window.location.search).get('id');
         const formData = new FormData(taskForm);
-        fetch(`/api/projects/${projectId}/tasks`, {
+        formData.append("project_id", projectId)
+        fetch(`api/projects/${projectId}/tasks`, {
             method: 'POST',
-            body: formData
+            // headers: {
+            //     'Content-Type': 'application/json',
+            //     'X-CSRF-TOKEN': getCsrfToken() // Add CSRF token here
+            // },
+            body: formData,
+            mode: 'no-cors'
         })
             .then(response => response.json())
             .then(task => {
                 fetchTasks(projectId);
+                const taskModal = document.getElementById('task-modal');
                 taskModal.style.display = 'none';
                 taskForm.reset();
             });
     });
 
     // Show/Hide Modal
-    createProjectBtn.addEventListener('click', () => {
+    createProjectBtn?.addEventListener('click', () => {
+        const projectModal = document.getElementById('project-modal');
         projectModal.style.display = 'block';
     });
 
-    addTaskBtn.addEventListener('click', () => {
+    addTaskBtn?.addEventListener('click', () => {
+        const taskModal = document.getElementById('task-modal');
         taskModal.style.display = 'block';
     });
 
     closeBtns.forEach(btn => {
         btn.addEventListener('click', () => {
-            projectModal.style.display = 'none';
-            taskModal.style.display = 'none';
+            const projectModal = document.getElementById('project-modal');
+            projectModal && (projectModal.style.display = 'none')
+            const taskModal = document.getElementById('task-modal');
+            taskModal && (taskModal.style.display = 'none')
         });
     });
 
@@ -103,3 +123,8 @@ document.addEventListener('DOMContentLoaded', function () {
         fetchTasks(projectId);
     }
 });
+
+// // Function to get CSRF token from meta tag
+// function getCsrfToken() {
+//     return document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+// }
