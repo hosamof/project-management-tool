@@ -24,6 +24,7 @@ cd project-management-tool
 ```bash
 composer install
 npm install
+npm run build
 ```
 
 ### 3. Setup Environment
@@ -56,7 +57,7 @@ php artisan serve
 - Implement Update and Delete for Projects and tasks
 - Advanced search and filtering.
 - User roles and permissions.
-- Real-time updates using WebSockets.
+- use front-end framework: (Vuejs, React...)
 
 
 ## License
