@@ -21,9 +21,10 @@ cd project-management-tool
 ```
 
 ### 2. Install Dependencies
+```bash
 composer install
 npm install
-
+```
 
 ### 3. Setup Environment
 - Copy .env.example to .env
